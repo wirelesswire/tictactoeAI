@@ -85,13 +85,26 @@ BOARD_TEMPLATE = '''
             fetch(`/make-move/${row}/${col}?mode=${currentMode}`, {
                 method: 'POST'
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error);
+                    });
+                }
+                return response.text();
+            })
             .then(html => {
                 document.body.innerHTML = html;
                 // Keep DQL button enabled after moves
                 const dqlButton = document.getElementById('dqlButton');
                 if (dqlButton) {
                     dqlButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                const statusDiv = document.querySelector('.status');
+                if (statusDiv) {
+                    statusDiv.textContent = error.message;
                 }
             });
         }
